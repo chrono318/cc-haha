@@ -108,8 +108,10 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   }
   const config = getGlobalConfig();
   let onboardingShown = false;
-  if (!config.theme || !config.hasCompletedOnboarding // always show onboarding at least once
-  ) {
+  // HAHA 改动:设 HAHA_SKIP_ONBOARDING 时跳过首次引导(theme/login 菜单),直接标记完成 + 设默认 theme。
+  const hahaSkipOnboarding = isEnvTruthy(process.env.HAHA_SKIP_ONBOARDING)
+  if (!hahaSkipOnboarding && (!config.theme || !config.hasCompletedOnboarding // always show onboarding at least once
+  )) {
     onboardingShown = true;
     const {
       Onboarding
@@ -120,6 +122,11 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
     }} />, {
       onChangeAppState
     });
+  } else if (hahaSkipOnboarding) {
+    completeOnboarding();
+    if (!config.theme) {
+      saveGlobalConfig(current => ({ ...current, theme: 'dark' }));
+    }
   }
 
   // Always show the trust dialog in interactive sessions, regardless of permission mode.
@@ -132,7 +139,8 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
     // Fast-path: skip TrustDialog import+render when CWD is already trusted.
     // If it returns true, the TrustDialog would auto-resolve regardless of
     // security features, so we can skip the dynamic import and render cycle.
-    if (!checkHasTrustDialogAccepted()) {
+    // HAHA 改动:设 HAHA_SKIP_ONBOARDING 时跳过 TrustDialog 弹窗(高权限模式下信任无意义)。
+    if (!hahaSkipOnboarding && !checkHasTrustDialogAccepted()) {
       const {
         TrustDialog
       } = await import('./components/TrustDialog/TrustDialog.js');
