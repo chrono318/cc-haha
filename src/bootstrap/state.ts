@@ -1233,6 +1233,11 @@ export function setAllowedSettingSources(sources: SettingSource[]): void {
 
 export function preferThirdPartyAuthentication(): boolean {
   // IDE extension should behave as 1P for authentication reasons.
+  // HAHA 改动:haha 用第三方 API key (ANTHROPIC_API_KEY env),交互 TUI 模式也要认 env key,
+  // 否则 TUI 状态栏显示 "Not logged in"(虽然实际能用)。设 HAHA_PREFER_3P_AUTH 时强制 true。
+  if (process.env.HAHA_PREFER_3P_AUTH === '1') {
+    return true
+  }
   return getIsNonInteractiveSession() && STATE.clientType !== 'claude-vscode'
 }
 
