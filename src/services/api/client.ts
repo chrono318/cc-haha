@@ -16,6 +16,7 @@ import {
   getAPIProvider,
   isFirstPartyAnthropicBaseUrl,
 } from 'src/utils/model/providers.js'
+import { getThirdPartyClientConfig } from 'src/utils/model/thirdPartyProviders.js'
 import { getProxyFetchOptions } from 'src/utils/proxy.js'
 import {
   getIsNonInteractiveSession,
@@ -310,6 +311,29 @@ export async function getAnthropicClient({
       : {}),
     ...ARGS,
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
+  }
+
+  // 第三方模型路由:按当前 model 覆盖 baseURL + apiKey。
+  // 解决"CLI 只认一组 ANTHROPIC_BASE_URL + token、无法按模型切换端点/密钥"的问题。
+  // 见 src/utils/model/thirdPartyProviders.ts。
+  const thirdParty = getThirdPartyClientConfig(model)
+  if (thirdParty) {
+    clientConfig.baseURL = thirdParty.baseURL
+    clientConfig.apiKey = thirdParty.apiKey
+    // 清掉 authToken:SDK 会把它变成 "Authorization: Bearer <authToken>" 头,
+    // 第三方端点优先认 Authorization,残留的 placeholder/旧 token 会导致 401。
+    // 注意必须用 null 而非 undefined —— SDK 对 undefined 会回退读
+    // process.env.ANTHROPIC_AUTH_TOKEN (代码别处可能设了 placeholder),null 才是"明确无"。
+    clientConfig.authToken = null
+    // 双保险:同时清环境变量在该请求生命周期内的兜底读取路径不可控,
+    // 故再显式覆盖 defaultHeaders 的 Authorization (configureApiKeyHeaders 注入的)。
+    if (clientConfig.defaultHeaders) {
+      delete clientConfig.defaultHeaders.Authorization
+      delete clientConfig.defaultHeaders.authorization
+    }
+    logForDebugging(
+      `[API:request] Third-party routing: model=${model} baseURL=${thirdParty.baseURL}`,
+    )
   }
 
   return new Anthropic(clientConfig)

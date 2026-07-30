@@ -64,7 +64,8 @@ function getAgentDirectoryPath(location: SettingSource): string {
     case 'userSettings':
       return join(getClaudeConfigHomeDir(), AGENT_PATHS.AGENTS_DIR)
     case 'projectSettings':
-      return join(getCwd(), AGENT_PATHS.FOLDER_NAME, AGENT_PATHS.AGENTS_DIR)
+      // HAHA 改动:project agents 不落 cwd/.claude/,改走全局目录。
+      return join(getClaudeConfigHomeDir(), AGENT_PATHS.AGENTS_DIR)
     case 'policySettings':
       return join(
         getManagedFilePath(),
@@ -72,14 +73,16 @@ function getAgentDirectoryPath(location: SettingSource): string {
         AGENT_PATHS.AGENTS_DIR,
       )
     case 'localSettings':
-      return join(getCwd(), AGENT_PATHS.FOLDER_NAME, AGENT_PATHS.AGENTS_DIR)
+      // HAHA 改动:local agents 同样改走全局目录。
+      return join(getClaudeConfigHomeDir(), AGENT_PATHS.AGENTS_DIR)
   }
 }
 
 function getRelativeAgentDirectoryPath(location: SettingSource): string {
   switch (location) {
     case 'projectSettings':
-      return join('.', AGENT_PATHS.FOLDER_NAME, AGENT_PATHS.AGENTS_DIR)
+      // HAHA 改动:已重定向到全局,返回绝对路径而非 cwd 相对路径。
+      return getAgentDirectoryPath(location)
     default:
       return getAgentDirectoryPath(location)
   }

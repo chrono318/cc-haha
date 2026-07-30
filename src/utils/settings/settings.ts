@@ -243,11 +243,14 @@ export function getSettingsRootPathForSource(source: SettingSource): string {
     case 'policySettings':
     case 'projectSettings':
     case 'localSettings': {
-      return resolve(getOriginalCwd())
+      // HAHA 改动:项目级配置不再落到工作目录 (cwd/.claude/),
+      // 统一指向 haha 全局目录 (~/.claude/),避免在每个工作目录留下 .claude。
+      return resolve(getClaudeConfigHomeDir())
     }
     case 'flagSettings': {
       const path = getFlagSettingsPath()
-      return path ? dirname(resolve(path)) : resolve(getOriginalCwd())
+      // HAHA 改动:同上,flagSettings 也指向全局目录而非 cwd。
+      return path ? dirname(resolve(path)) : resolve(getClaudeConfigHomeDir())
     }
   }
 }
@@ -300,9 +303,12 @@ export function getRelativeSettingsFilePathForSource(
 ): string {
   switch (source) {
     case 'projectSettings':
-      return join('.claude', 'settings.json')
+      // HAHA 改动:root 已重定向到全局 (~/.claude),相对路径去掉 .claude/ 前缀,
+      // 直接读 ~/.claude/settings.json(与 userSettings 同源,不重复成 ~/.claude/.claude/)。
+      return 'settings.json'
     case 'localSettings':
-      return join('.claude', 'settings.local.json')
+      // HAHA 改动:同上,读 ~/.claude/settings.local.json。
+      return 'settings.local.json'
   }
 }
 

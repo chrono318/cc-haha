@@ -847,8 +847,12 @@ export const getMemoryFiles = memoize(
     }
 
     // Then process Project and Local files
-    const dirs: string[] = []
+    // HAHA 改动:跳过 Project/Local CLAUDE.md 加载。不读工作目录 (cwd 向上) 的
+    // CLAUDE.md / CLAUDE.local.md / .claude/rules/,只加载 User (haha 自己的 ~/.cc-haha/CLAUDE.md)。
+    // 避免 haha 读到工作目录里别的 agent 留的 CLAUDE.md 造成污染/冲突。
     const originalCwd = getOriginalCwd()
+    if (process.env.HAHA_SKIP_PROJECT_CLAUDE_MD !== '1') {
+    const dirs: string[] = []
     let currentDir = originalCwd
 
     while (currentDir !== parse(currentDir).root) {
@@ -932,6 +936,7 @@ export const getMemoryFiles = memoize(
         )
       }
     }
+    } // HAHA: end if (!HAHA_SKIP_PROJECT_CLAUDE_MD)
 
     // Process CLAUDE.md from additional directories (--add-dir) if env var is enabled
     // This is controlled by CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD and defaults to off

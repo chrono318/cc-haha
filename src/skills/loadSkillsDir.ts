@@ -85,7 +85,9 @@ export function getSkillsPath(
     case 'userSettings':
       return join(getClaudeConfigHomeDir(), dir)
     case 'projectSettings':
-      return `.claude/${dir}`
+      // HAHA 改动:项目 skills 不再从 cwd/.claude/ 读,改从全局目录读,
+      // 与 userSettings 同源,避免在工作目录留 .claude。
+      return join(getClaudeConfigHomeDir(), dir)
     case 'plugin':
       return 'plugin'
     default:

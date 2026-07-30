@@ -32,6 +32,7 @@ import {
 } from './model.js'
 import { has1mContext } from '../context.js'
 import { getGlobalConfig } from '../config.js'
+import { getThirdPartyModelOptions } from './thirdPartyProviders.js'
 
 // @[MODEL LAUNCH]: Update all the available and default model option strings below.
 
@@ -460,6 +461,14 @@ function getKnownModelOption(model: string): ModelOption | null {
 
 export function getModelOptions(fastMode = false): ModelOption[] {
   const options = getModelOptionsBase(fastMode)
+
+  // 注入第三方模型 (DeepSeek V4 Pro / Kimi K3),对所有用户层级生效。
+  // 内置 picker 只列 Anthropic 家族,第三方网关模型需在此统一注入。
+  for (const opt of getThirdPartyModelOptions()) {
+    if (!options.some(existing => existing.value === opt.value)) {
+      options.push(opt)
+    }
+  }
 
   // Add the custom model from the ANTHROPIC_CUSTOM_MODEL_OPTION env var
   const envCustomModel = process.env.ANTHROPIC_CUSTOM_MODEL_OPTION

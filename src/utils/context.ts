@@ -4,6 +4,7 @@ import { getGlobalConfig } from './config.js'
 import { isEnvTruthy } from './envUtils.js'
 import { getCanonicalName } from './model/model.js'
 import { getModelCapability } from './model/modelCapabilities.js'
+import { getThirdPartyModel } from './model/thirdPartyProviders.js'
 
 // Model context window size (200k tokens for all models right now)
 export const MODEL_CONTEXT_WINDOW_DEFAULT = 200_000
@@ -94,6 +95,14 @@ export function getContextWindowForModel(
       return antModel.contextWindow
     }
   }
+
+  // 第三方模型:内置 ant-only 能力检测不命中,查本地能力表拿真实上下文窗口
+  // (DeepSeek V4 Pro / Kimi K3 均为 1M,避免回退 200k 导致提前压缩)。
+  const thirdParty = getThirdPartyModel(model)
+  if (thirdParty) {
+    return thirdParty.maxInputTokens
+  }
+
   return MODEL_CONTEXT_WINDOW_DEFAULT
 }
 
@@ -159,6 +168,15 @@ export function getModelMaxOutputTokens(model: string): {
       defaultTokens = antModel.defaultMaxTokens ?? MAX_OUTPUT_TOKENS_DEFAULT
       upperLimit = antModel.upperMaxTokensLimit ?? MAX_OUTPUT_TOKENS_UPPER_LIMIT
       return { default: defaultTokens, upperLimit }
+    }
+  }
+
+  // 第三方模型:用本地能力表的真实输出上限,不套用 Claude 家族的 32k/64k 默认。
+  const thirdParty = getThirdPartyModel(model)
+  if (thirdParty) {
+    return {
+      default: thirdParty.maxOutputTokens,
+      upperLimit: thirdParty.maxOutputTokens,
     }
   }
 

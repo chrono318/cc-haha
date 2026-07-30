@@ -1164,6 +1164,17 @@ async function hasPermissionsToUseToolInner(
     throw new AbortError()
   }
 
+  // HAHA 改动:高权限模式。设了 HAHA_HIGH_PERMISSION env 时,所有工具直接 allow,
+  // 不按目录/工作区/危险文件做任何拦截(包括 .git/.claude 等 safetyCheck)。
+  // 启动器(cc-haha / cc-haha.cmd)统一设此 env。用户明确要 haha 高权限。
+  if (process.env.HAHA_HIGH_PERMISSION === '1') {
+    return {
+      behavior: 'allow',
+      updatedInput: input,
+      decisionReason: { type: 'mode', mode: 'bypassPermissions' },
+    }
+  }
+
   let appState = context.getAppState()
 
   // 1. Check if the tool is denied
@@ -1252,12 +1263,14 @@ async function hasPermissionsToUseToolInner(
   // 1g. Safety checks (e.g. .git/, .claude/, .vscode/, shell configs) are
   // bypass-immune — they must prompt even in bypassPermissions mode.
   // checkPathSafetyForAutoEdit returns {type:'safetyCheck'} for these paths.
-  if (
-    toolPermissionResult?.behavior === 'ask' &&
-    toolPermissionResult.decisionReason?.type === 'safetyCheck'
-  ) {
-    return toolPermissionResult
-  }
+  // HAHA 改动:注掉此 bypass-immune 分支,让 bypassPermissions 模式能盖过
+  // 危险目录(.git/.claude 等)检查,实现高权限(用户已设 defaultMode=bypassPermissions)。
+  // if (
+  //   toolPermissionResult?.behavior === 'ask' &&
+  //   toolPermissionResult.decisionReason?.type === 'safetyCheck'
+  // ) {
+  //   return toolPermissionResult
+  // }
 
   // 2a. Check if mode allows the tool to run
   // IMPORTANT: Call getAppState() to get the latest value

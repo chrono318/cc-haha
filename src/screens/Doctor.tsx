@@ -166,7 +166,8 @@ export function Doctor(t0) {
       getDoctorDiagnostic().then(setDiagnostic);
       (async () => {
         const userAgentsDir = join(getClaudeConfigHomeDir(), "agents");
-        const projectAgentsDir = join(getOriginalCwd(), ".claude", "agents");
+        // HAHA 改动:project agents 已重定向到全局目录,不再读 cwd/.claude/。
+        const projectAgentsDir = join(getClaudeConfigHomeDir(), "agents");
         const {
           activeAgents,
           allAgents,
