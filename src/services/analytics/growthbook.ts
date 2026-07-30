@@ -170,21 +170,21 @@ let envOverridesParsed = false
 function getEnvOverrides(): Record<string, unknown> | null {
   if (!envOverridesParsed) {
     envOverridesParsed = true
-    if (process.env.USER_TYPE === 'ant') {
-      const raw = process.env.CLAUDE_INTERNAL_FC_OVERRIDES
-      if (raw) {
-        try {
-          envOverrides = JSON.parse(raw) as Record<string, unknown>
-          logForDebugging(
-            `GrowthBook: Using env var overrides for ${Object.keys(envOverrides!).length} features: ${Object.keys(envOverrides!).join(', ')}`,
-          )
-        } catch {
-          logError(
-            new Error(
-              `GrowthBook: Failed to parse CLAUDE_INTERNAL_FC_OVERRIDES: ${raw}`,
-            ),
-          )
-        }
+    // HAHA 改动:去掉 USER_TYPE === 'ant' 限制,让 CLAUDE_INTERNAL_FC_OVERRIDES 对所有用户生效。
+    // 第三方模型场景 GrowthBook 被禁用(拉不到远程 flag 全走默认 false),需此 env 覆盖开记忆等功能。
+    const raw = process.env.CLAUDE_INTERNAL_FC_OVERRIDES
+    if (raw) {
+      try {
+        envOverrides = JSON.parse(raw) as Record<string, unknown>
+        logForDebugging(
+          `GrowthBook: Using env var overrides for ${Object.keys(envOverrides!).length} features: ${Object.keys(envOverrides!).join(', ')}`,
+        )
+      } catch {
+        logError(
+          new Error(
+            `GrowthBook: Failed to parse CLAUDE_INTERNAL_FC_OVERRIDES: ${raw}`,
+          ),
+        )
       }
     }
   }

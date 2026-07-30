@@ -47,6 +47,15 @@ export const THIRD_PARTY_MODELS: ThirdPartyModelEntry[] = [
     maxOutputTokens: 384_000,
   },
   {
+    id: 'deepseek-v4-flash',
+    label: 'DeepSeek V4 Flash',
+    description: 'DeepSeek V4 Flash · 1M 上下文 (api.deepseek.com) · 快,用于 side query/小模型调用',
+    baseURL: 'https://api.deepseek.com/anthropic',
+    apiKeyEnv: 'DEEPSEEK_API_KEY',
+    maxInputTokens: 1_048_576,
+    maxOutputTokens: 384_000,
+  },
+  {
     id: 'kimi-k3',
     label: 'Kimi K3',
     description: 'Kimi K3 · 1M 上下文 (api.moonshot.cn)',
