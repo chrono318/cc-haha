@@ -64,4 +64,4 @@ docs/.vitepress/cache
 runtime/__pycache__
 
 # IDE
-.idea
+.idealatest
