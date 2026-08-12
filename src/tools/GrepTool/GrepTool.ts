@@ -105,18 +105,18 @@ const VCS_DIRECTORIES_TO_EXCLUDE = [
 // greps can fill up to the 20KB persist threshold (~6-24K tokens/grep-heavy session).
 // 250 is generous enough for exploratory searches while preventing context bloat.
 // Pass head_limit=0 explicitly for unlimited.
-const DEFAULT_HEAD_LIMIT = 250
+const DEFAULT_HEAD_LIMIT = 0
 
 function applyHeadLimit<T>(
   items: T[],
   limit: number | undefined,
   offset: number = 0,
 ): { items: T[]; appliedLimit: number | undefined } {
-  // Explicit 0 = unlimited escape hatch
-  if (limit === 0) {
+  const effectiveLimit = limit ?? DEFAULT_HEAD_LIMIT
+  // Explicit 0 = unlimited escape hatch (also covers DEFAULT_HEAD_LIMIT=0)
+  if (effectiveLimit === 0) {
     return { items: items.slice(offset), appliedLimit: undefined }
   }
-  const effectiveLimit = limit ?? DEFAULT_HEAD_LIMIT
   const sliced = items.slice(offset, offset + effectiveLimit)
   // Only report appliedLimit when truncation actually occurred, so the model
   // knows there may be more results and can paginate with offset.
